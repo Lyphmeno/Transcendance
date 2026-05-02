@@ -1,60 +1,94 @@
-# <p align="center">ft_transcendence</p>
+# ft_transcendence
 
-> _Ce projet est quelque chose que vous n’avez jamais fait auparavant._
->
-> _Rappelez-vous du début de votre voyage en programmation. Regardez-vous maintenant. Il est temps de briller !_
+**ft_transcendence** is a fullstack web project from the **42 curriculum**.
 
-## Preview
+The goal was to design and build a complete web application around the classic **Pong** game.
 
-![](./preview.gif)
+## Project Requirements
 
-> L'image prend du temps à charger :)
+The subject required building a web platform where users can play **Pong** directly from the browser.
 
-## Checklist
+The main requirements included:
 
-- [x] Profil utilisateur
-  - Connexion via l'API 42
-  - 2FA
-  - Gestion de compte
-  - Liste d'amis
-  - Historique des matchs
-  - Achievements
-- [x] Classement
-- [x] Tchat
-  - Messages directs
-  - Canaux de discussion
-- [x] Jeu
-  - Matchmaking
-  - Réactif
-  - Mode spectateur
-  - Plusieurs personnages
-- [x] SQLi protected
-- [x] No crash
+- a **single-page application**;
+- a **real-time Pong game**;
+- a **multiplayer mode**;
+- fair gameplay rules for all players;
+- Docker-based execution with a single command;
+- compatibility with the latest stable version of **Google Chrome**;
+- local storage of secrets through `.env` files;
+- user input validation;
+- authentication-related security features.
 
-## Usage `42stud only`
+The project could also be extended with optional modules.
 
-```bash
-sudo apt update -y
-sudo apt install -y make
-sudo apt install -y unzip
-sudo apt install -y docker.io
-sudo apt install -y docker-compose
-```
+Relevant optional modules implemented or partially covered in this project include:
 
-```bash
-git clone https://github.com/ft_transcendence.git
-cd ft_transcendence
-```
+- **Backend framework** — implemented with **NestJS**.
+- **Frontend framework / toolkit** — implemented with **React** and **TypeScript**.
+- **Backend database** — implemented with **PostgreSQL** and **Prisma**.
+- **Standard user management** — profiles, account management, friends, match history and achievements.
+- **Remote authentication** — authentication through the **42 API**.
+- **Remote players** — online multiplayer features.
+- **Live chat** — direct messages and discussion channels.
+- **User statistics and game history** — rankings, match history and achievements.
+- **2FA and JWT authentication** — stronger authentication flow.
+- **Game customization** — multiple playable characters.
+- **Responsive design** — support for different screen sizes.
 
-- Recupère ta clé API 42
-- Édite `backend/files/.env`:
-  - FortyTwoClientID
-  - FortyTwoSecret
+## Stack
 
-```bash
-unzip backend.zip
-unzip frontend.zip
-sudo make
-# ça va prendre du temps
-# ensuite -> http://localhost:8080
-```
+### Frontend
+
+- **React**
+- **TypeScript**
+- **Webpack**
+- **Phaser**
+
+### Backend
+
+- **Node.js**
+- **NestJS**
+- **TypeScript**
+- **Prisma**
+
+The backend handles:
+- the application API;
+- authentication;
+- user-related features;
+- game-related data;
+- real-time communication.
+
+### Database
+
+- **PostgreSQL**
+- **Prisma ORM**
+
+PostgreSQL is used as the main database.  
+Prisma is used to model the database schema and interact with persisted data.
+
+## Usage
+
+To use the authentication flow, the project requires a **42 API Key**.
+
+When creating the application on the **42 API website**, the redirect URL must be set to:
+
+http://localhost:3000/auth/42/callback
+
+Then, the following environment variables must be configured in `backend/files/.env`:
+
+- `FortyTwoClientID`
+- `FortyTwoSecret`
+- `FortyTwoCallBackURL`
+
+Example:
+
+FortyTwoClientID=your_client_id  
+FortyTwoSecret=your_client_secret  
+FortyTwoCallBackURL=http://localhost:3000/auth/42/callback
+
+Once the environment variables are configured, the project can be started with Docker Compose.
+
+The application is then available at:
+
+http://localhost:8080
