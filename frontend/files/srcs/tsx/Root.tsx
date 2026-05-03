@@ -252,7 +252,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({
 // --------ROOT------------------------------------------------------------ //
 const Root: React.FC = () => {
     // ----TYPES------------------------------ //
-    type connectionType = 'matchmaking' | 'private'
+    type connectionType = 'matchmaking' | 'private' | 'solo'
 
     // ----ROUTER----------------------------- //
     const location = useLocation()
@@ -363,7 +363,10 @@ const Root: React.FC = () => {
         catch (error) { console.error('[ERROR] Matchmaker():', error) }
         gameSocket.current?.on('connectionType', () => {
             // console.log("Recieved connexion type")
-            if (opponentID === undefined)
+            if (type === 'solo') {
+                gameSocket.current?.emit(type)
+            }
+            else if (opponentID === undefined)
                 gameSocket.current?.emit(type)
             else {
                 // console.log('opponentId to send private', opponentID);
@@ -371,6 +374,11 @@ const Root: React.FC = () => {
             }
         })
         gameSocket.current?.on('matching', () => setMatchmaking(true))
+        gameSocket.current?.on('connect_error', () => {
+            gameSocket.current?.disconnect()
+            gameSocket.current = undefined
+            setMatchmaking(false)
+        })
         gameSocket.current?.on('matched', () => {
             matchmakerBtnLocked.current = true
             setMatchmaking(false)
@@ -412,6 +420,7 @@ const Root: React.FC = () => {
                     inGame={inGame}
                     setInGame={setInGame}
                     matchmaking={matchmaking}
+                    setMatchmaking={setMatchmaking}
                     startGameSockets={startGameSockets}
                 />
             </header>}

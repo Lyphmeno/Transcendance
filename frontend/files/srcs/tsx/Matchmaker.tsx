@@ -85,17 +85,18 @@ export const GameInfos: React.FC<GameInfosProps> = ({
 }
 
 // --------MATCHMAKER------------------------------------------------------ //
-type connectionType = 'matchmaking' | 'private'
+type connectionType = 'matchmaking' | 'private' | 'solo'
 export interface MatchmakerProps {
 	gameSocket: React.MutableRefObject<Socket<any, any> | undefined>
 	btnLocked: React.MutableRefObject<boolean>
 	inGame: boolean
 	setInGame: React.Dispatch<React.SetStateAction<boolean>>
 	matchmaking: boolean
+	setMatchmaking: React.Dispatch<React.SetStateAction<boolean>>
 	startGameSockets: (type: connectionType) => void
 }
 const Matchmaker: React.FC<MatchmakerProps> = ({
-	gameSocket, btnLocked, inGame, setInGame, matchmaking, startGameSockets
+	gameSocket, btnLocked, inGame, setInGame, matchmaking, setMatchmaking, startGameSockets
 }) => {
 	// ----ROUTER----------------------------- //
 	const navigate = useNavigate()
@@ -105,19 +106,45 @@ const Matchmaker: React.FC<MatchmakerProps> = ({
 		if (btnLocked.current) return
 		btnLocked.current = true
 		if (!inGame) {
-			if (!matchmaking) startGameSockets('matchmaking')
-			else gameSocket.current?.emit('stopMatchmaking')
+			if (!matchmaking) {
+				setMatchmaking(true)
+				startGameSockets('matchmaking')
+			}
+			else {
+				setMatchmaking(false)
+				gameSocket.current?.emit('stopMatchmaking')
+			}
 		}
 		else {
 			gameSocket.current?.disconnect()
 			gameSocket.current = undefined
 			setInGame(false)
+			setMatchmaking(false)
 			navigate('/')
 		}
 		const timer = setTimeout(() => { btnLocked.current = false }, 350)
 		return () => clearTimeout(timer)
 	}
-	const matchmakerBtnHdl = { onMouseUp: toggleMatchmaker }
+	const matchmakerBtnHdl = { onClick: toggleMatchmaker }
+
+	const toggleSolo = () => {
+		if (btnLocked.current) return
+		btnLocked.current = true
+		if (!inGame) {
+			setMatchmaking(false)
+			startGameSockets('solo')
+		}
+		else {
+			gameSocket.current?.disconnect()
+			gameSocket.current = undefined
+			setInGame(false)
+			setMatchmaking(false)
+			navigate('/')
+		}
+		const timer = setTimeout(() => { btnLocked.current = false }, 350)
+		return () => clearTimeout(timer)
+	}
+	const soloBtnHdl = { onClick: toggleSolo }
 
 	// ----ANIMATIONS------------------------- //
 	const popUpMotion = popUp({ inDuration: 0.3, outDuration: 0.3 })
@@ -139,20 +166,42 @@ const Matchmaker: React.FC<MatchmakerProps> = ({
 
 	// ----CLASSNAMES------------------------- //
 	const boxName = 'matchmaker'
-	const txtName = `custom-txt ${boxName}-txt-${(
+	const stateName = `${boxName}-state-${(
 		inGame ? 'exit' : (matchmaking ? 'stop' : 'play')
 	)}`
+	const modeName = `${boxName}-modes`
+	const buttonLabelName = `${boxName}-label`
 
 	// ----RENDER----------------------------- //
-	return <motion.button
+	if (inGame || matchmaking) return <motion.button
+		type='button'
 		className={boxName}
 		{...boxMotion}
 		{...matchmakerBtnHdl}>
 		<AnimatePresence mode='wait'>
-			<motion.div key={txtName} className={txtName} {...txtMotion}>
-				{matchmaking && <Timer />}
+			<motion.div key={stateName} className={stateName} {...txtMotion}>
+				<span className={buttonLabelName}>
+					{matchmaking ? <Timer /> : 'exit'}
+				</span>
 			</motion.div>
 		</AnimatePresence>
 	</motion.button>
+
+	return <div className={modeName}>
+		<motion.button
+			type='button'
+			className={`${boxName} ${boxName}--mode`}
+			{...boxMotion}
+			{...matchmakerBtnHdl}>
+			<span className={buttonLabelName}>multi</span>
+		</motion.button>
+		<motion.button
+			type='button'
+			className={`${boxName} ${boxName}--mode ${boxName}--solo`}
+			{...boxMotion}
+			{...soloBtnHdl}>
+			<span className={buttonLabelName}>solo</span>
+		</motion.button>
+	</div>
 }
 export default Matchmaker

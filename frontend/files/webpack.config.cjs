@@ -45,6 +45,13 @@ module.exports = {
         devServer: {
                 static: { directory: path.join(__dirname, './srcs/resources/') },
                 hot: true,
-                historyApiFallback: true
+                historyApiFallback: true,
+                watchFiles: {
+                        paths: ['srcs/**/*'],
+                        options: {
+                                usePolling: true,
+                                interval: 1000
+                        }
+                }
         }
 }

@@ -1,0 +1,14 @@
+import { ChanMember, ChanMessage, Channel, User } from "@prisma/client";
+export declare function findChannelbyId(id: number): Promise<Channel | null>;
+export declare function findAllMembersByChanID(chanId: number): Promise<ChanMember[]>;
+export declare function findAllNonMembersByChanId(chanId: number): Promise<User[]>;
+export declare function findAllChannelsByMember(member: number): Promise<ChanMember[]>;
+export declare function findAllChannelsNonMember(member: number): Promise<Channel[]>;
+export declare function findAllChannelsByUserId(member: number): Promise<Channel[]>;
+export declare function findChannelsthatStartby(startBy: string): Promise<Channel[]>;
+export declare function findAllPublicChannels(): Promise<Channel[]>;
+export declare function findAllProtectedChannels(): Promise<Channel[]>;
+export declare function findAllChannelsNotMember(): Promise<Channel[]>;
+export declare function findManyChanMessages(chanId: number, count: number): Promise<ChanMessage[]>;
+export declare function findAllChanMessages(chanId: number): Promise<ChanMessage[]>;
+export declare function findUserStartsby(startBy: string, userId: number): Promise<User[]>;

@@ -38,7 +38,8 @@ export interface player {
 	nickname: string								// Player nickname
 	workerId: string | undefined					// Player worker ID
 	character: string								// Player character name
-	state: string									// Player game state
+	state: string						// Player game state
+	isBot?: boolean						// Bot player flag
 }
 
 // Player life display value
@@ -87,7 +88,8 @@ interface party {
 	leftPlayer: player | undefined					// Left player client ID
 	rightPlayer: player | undefined					// Right player client ID
 	startTime: string								// Game start time
-	remainingPlayers: number						// Number of remaining players in the party
+	remainingPlayers: number				// Number of remaining players in the party
+	isSolo?: boolean					// Solo party flag
 }
 
 // ----WORKER COMMUNICATION------------------------- //
@@ -192,6 +194,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 		return (<PlayerAchievements>payload).leftAchiv !== undefined
 	}
 
+	isBotParty(party: party): boolean {
+		return !!party.leftPlayer?.isBot || !!party.rightPlayer?.isBot
+	}
+
 	// Create a new sesion player construct
 	newWorkerConstruct(characterName: string, side: Side): playerConstructToWorker {
 		let character = Characters[characterName]
@@ -278,6 +284,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 					left: boolean[],
 					right: boolean[]
 				} = this.getAchievements(payload)
+				if (this.isBotParty(newParty)) {
+					this.endWorker(newParty)
+					return
+				}
 				let i = 0
 				for (let achievement of achievements.left) {
 					if (achievement) {
@@ -309,7 +319,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 	}
 
 	// Starts a new party
-	async createParty(leftPlayer: player, rightPlayer: player) {
+	async createParty(leftPlayer: player, rightPlayer: player, isSolo: boolean = false) {
 		let newParty: party = {
 			id: uuidv4(),
 			worker: new Worker('./dist/worker/worker.js'),
@@ -317,7 +327,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 			leftPlayer: leftPlayer,
 			rightPlayer: rightPlayer,
 			startTime: Date(),
-			remainingPlayers: 2
+			remainingPlayers: 2,
+			isSolo: isSolo
 		}
 		newParty.leftPlayer?.socket?.emit('matched')
 		newParty.rightPlayer?.socket?.emit('matched')
@@ -329,10 +340,49 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 	}
 
 	async sendOpponents(leftPlayer: player, rightPlayer: player) {
+		if (leftPlayer.socket && rightPlayer.socket) {
+			let leftUser = await this.chatService.getUserFromSocket(leftPlayer.socket)
+			let rightUser = await this.chatService.getUserFromSocket(rightPlayer.socket)
+			leftPlayer.socket.emit('opponent', rightUser)
+			rightPlayer.socket.emit('opponent', leftUser)
+		}
+	}
+
+	async sendSoloOpponent(leftPlayer: player, rightPlayer: player) {
+		if (!leftPlayer.socket) return
 		let leftUser = await this.chatService.getUserFromSocket(leftPlayer.socket)
-		let rightUser = await this.chatService.getUserFromSocket(rightPlayer.socket)
-		leftPlayer.socket.emit('opponent', rightUser)
-		rightPlayer.socket.emit('opponent', leftUser)
+		leftPlayer.socket.emit('opponent', {
+			id: 0,
+			nickname: 'Bot',
+			avatarFilename: leftUser?.avatarFilename ?? ''
+		})
+	}
+
+	getBotCharacter(excludeCharacter: string): string {
+		const characterNames = Object.keys(Characters)
+		for (let name of characterNames) {
+			if (name !== excludeCharacter) return name
+		}
+		return characterNames[0] ?? 'Boreas'
+	}
+
+	createBotPlayer(humanPlayer: player): player {
+		const botId = 'bot-' + uuidv4()
+		const botSocket = {
+			id: botId,
+			emit: (_event: string, _payload?: any) => { },
+			disconnect: () => { }
+		} as unknown as Socket
+		return {
+			socket: botSocket,
+			id: botId,
+			userId: -1,
+			nickname: 'Bot',
+			workerId: undefined,
+			character: this.getBotCharacter(humanPlayer.character),
+			state: 'ready',
+			isBot: true
+		}
 	}
 
 	startPrivateGame(p1Socket: Socket, p2Socket: Socket) {
@@ -352,6 +402,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 				this.createParty(leftPlayer, rightPlayer);
 			}
 		}, 1000)
+	}
+
+	@SubscribeMessage('solo')
+	async handleSolo(socket: Socket) {
+		let humanPlayer: player = players[socket.id]
+		if (!humanPlayer || humanPlayer.workerId) return
+		let botPlayer: player = this.createBotPlayer(humanPlayer)
+		await this.sendSoloOpponent(humanPlayer, botPlayer)
+		this.createParty(humanPlayer, botPlayer, true)
 	}
 
 	// Creates a new party if there is at least two player in the queue
@@ -400,9 +459,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 	async playerIsDead(winner: player | undefined, party: party) {
 		if (party.leftPlayer && party.rightPlayer && winner) {
 			let loser: player = (winner.id == party.leftPlayer.id ? party.rightPlayer : party.leftPlayer)
-			this.userService.updateRank(winner.userId, 10)
-			this.userService.updateRank(loser.userId, -10)
-			this.sendPartyEnd(winner, party)
+			if (!this.isBotParty(party)) {
+				await this.userService.updateRank(winner.userId, 10)
+				await this.userService.updateRank(loser.userId, -10)
+				await this.sendPartyEnd(winner, party)
+			}
 			winner.socket?.emit('eventOn', 'victory')
 			loser.socket?.emit('eventOn', 'defeat')
 			setTimeout(() => {
@@ -516,6 +577,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 			if (party.leftPlayer && party.rightPlayer) {
 				let playerSide = (party.leftPlayer.id == player.id ? 'leftPlayer' : 'rightPlayer')
 				party[playerSide].state = payload
+				const botSide = (party.leftPlayer.isBot ? 'leftPlayer' : (party.rightPlayer.isBot ? 'rightPlayer' : undefined))
+				if (botSide && payload == 'created')
+					party[botSide].state = 'created'
 				if (party.rightPlayer.state == 'ready' && party.leftPlayer.state == 'ready')
 					this.createWebConstructs(party)
 				else if (party.workerState == 'created' && party.leftPlayer.state == 'created' && party.rightPlayer.state == 'created')
@@ -547,7 +611,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 				party.worker?.postMessage({ newState: 'achievements' })
 			else {
 				let remainingPlayer: player = (party.leftPlayer.id == disconnectedPlayer.id ? party.rightPlayer : party.leftPlayer)
-				this.sendPartyEnd(remainingPlayer, party)
+				if (!this.isBotParty(party))
+					await this.sendPartyEnd(remainingPlayer, party)
 				remainingPlayer.socket?.emit('eventOn', 'victory')
 				party.worker?.postMessage({ newState: 'stopped' })
 				setTimeout(() => {

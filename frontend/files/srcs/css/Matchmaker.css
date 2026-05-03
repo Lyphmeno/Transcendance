@@ -7,18 +7,59 @@
 /* ------------------------------ */
 
 /* ---MATCHMAKER----------------- */
+.matchmaker-modes {
+	/* #1 Éléments */
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+
+	/* #2 Forme */
+	width: 100%;
+
+	/* #3 Position */
+	grid-row: 3 / 3;
+	z-index: 3;
+}
+
 .matchmaker {
 	/* #1 Éléments */
 	background-image: url('../resources/assets/ui/backgrounds/button-black1-255x100.png');
 	border: 3px solid rgb(80, 160, 255);
+	display: flex;
+	align-items: center;
+	justify-content: center;
 
 	/* #2 Forme */
+	width: 100%;
+	min-height: 80px;
 	border-bottom-left-radius: 10px;
 	border-bottom-right-radius: 10px;
 
 	/* #3 Position */
 	grid-row: 3 / 3;
 	z-index: 3;
+}
+
+.matchmaker--mode {
+	/* #2 Forme */
+	min-width: 0;
+	min-height: 70px;
+}
+
+.matchmaker--solo {
+	/* #1 Éléments */
+	border-color: rgb(210, 90, 110);
+}
+
+.matchmaker-label {
+	/* #1 Éléments */
+	background: none;
+	display: block;
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1;
+	text-align: center;
+	text-transform: uppercase;
 }
 
 .matchmaker-txt-play {
