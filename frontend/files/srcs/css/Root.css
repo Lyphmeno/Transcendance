@@ -115,21 +115,40 @@ form {
 	translate: -50% -50%;
 }
 
-.login-42btn {
+.login-btns {
 	/* #1 Éléments */
-	background-image: url('../resources/assets/ui/buttons/login.png');
-	border: 3px solid rgb(255, 255, 255);
-
-	/* #2 Forme */
-	width: 100px;
-	height: 100px;
-	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
 
 	/* #3 Position */
 	position: fixed;
 	top: 50%;
 	left: 50%;
 	translate: -50% -50%;
+}
+
+.login-42btn,
+.login-guestbtn {
+	/* #1 Éléments */
+	border: 3px solid rgb(255, 255, 255);
+
+	/* #2 Forme */
+	width: 100px;
+	height: 100px;
+	border-radius: 10px;
+}
+
+.login-42btn {
+	/* #1 Éléments */
+	background-image: url('../resources/assets/ui/buttons/login.png');
+}
+
+.login-guestbtn {
+	/* #1 Éléments */
+	background-image: url('../resources/assets/ui/backgrounds/button-black1-255x100.png');
+	font-size: 18px;
+	text-transform: uppercase;
 }
 
 .login-2fa {

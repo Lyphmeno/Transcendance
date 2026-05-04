@@ -69,6 +69,14 @@ export class UserService {
     return user;
   }
 
+  async createGuest(): Promise<User> {
+    const seed = `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+    return this.createOne({
+      email: `guest-${seed}@transcendance.local`,
+      nickname: `guest-${seed}`,
+    });
+  }
+
   async findAll(): Promise<User[] | null> {
     const users: User[] = await this.prisma.user.findMany({});
     return users;

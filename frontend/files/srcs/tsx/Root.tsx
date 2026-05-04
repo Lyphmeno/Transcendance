@@ -59,6 +59,21 @@ const Login: React.FC<LoginProps> = ({ show2FA, login }) => {
             window.location.href = `${BACK_ADDR}/auth/42/login`
         }
     }
+    const guestBtnHdl = {
+        onMouseUp: () => {
+            ftFetch('/auth/guest', 'POST')
+                .then(() => {
+                    localStorage.setItem('logged', '1')
+                    login()
+                })
+                .catch(x => {
+                    console.error('Login():', x)
+                    setErrorLog('guest login failed')
+                    const timer = setTimeout(() => setErrorLog(''), 2000)
+                    return () => clearTimeout(timer)
+                })
+        }
+    }
     const inputHdl = {
         onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
             setInputValue(e.target.value)
@@ -101,7 +116,9 @@ const Login: React.FC<LoginProps> = ({ show2FA, login }) => {
 
     // ----CLASSNAMES------------------------- //
     const loginTxtName = `login-txt`
+    const loginBtnGroupName = `login-btns`
     const login42btnName = `login-42btn`
+    const guestBtnName = `login-guestbtn`
     const twoFactorName = `login-2fa`
 
     // ----RENDER----------------------------- //
@@ -109,11 +126,19 @@ const Login: React.FC<LoginProps> = ({ show2FA, login }) => {
         <motion.div className={loginTxtName} {...loginTxtNameMotion}>
             login with
         </motion.div>
-        <motion.button
-            className={login42btnName}
-            {...login42btnMotion}
-            {...login42btnHdl}
-        />
+        <div className={loginBtnGroupName}>
+            <motion.button
+                className={login42btnName}
+                {...login42btnMotion}
+                {...login42btnHdl}
+            />
+            <motion.button
+                className={guestBtnName}
+                {...login42btnMotion}
+                {...guestBtnHdl}>
+                guest
+            </motion.button>
+        </div>
         {show2FA && <motion.form
             className={twoFactorName}
             {...formHdl}

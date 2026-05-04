@@ -37,6 +37,18 @@ export class AuthController {
         res.redirect('http://' + this.hostIp + ':8080');
     }
 
+    @Post('guest')
+    async handleGuestLogin(@Res({ passthrough: true }) res: Response): Promise<User> {
+        const user: User = await this.userService.createGuest();
+        const access_token = await this.authService.login(user, true);
+        res.cookie('access_token', access_token, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 7,
+            sameSite: 'lax',
+        });
+        return user;
+    }
+
     @Get('logout')
     @UseGuards(JwtGuard)
     logout(@Req() req: Request, @Res({ passthrough: true }) res: Response): any {
