@@ -12,6 +12,12 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from 'nestjs-prisma';
 import { JwtTwoFactorStrategy } from './strategies/JwtTwoFactorStrategy.js';
 
+const fortyTwoProviders = (
+  process.env.FortyTwoClientID
+  && process.env.FortyTwoSecret
+  && process.env.FortyTwoCallBackURL
+) ? [FortyTwoStrategy] : []
+
 @Module({
   imports: [
     PrismaModule,
@@ -24,7 +30,7 @@ import { JwtTwoFactorStrategy } from './strategies/JwtTwoFactorStrategy.js';
     UserModule,
   ],
   providers: [
-    FortyTwoStrategy,
+    ...fortyTwoProviders,
     JwtStrategy,
     JwtTwoFactorStrategy,
     AuthService,

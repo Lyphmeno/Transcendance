@@ -87,6 +87,8 @@ FortyTwoClientID=your_client_id
 FortyTwoSecret=your_client_secret  
 FortyTwoCallBackURL=http://localhost:3000/auth/42/callback
 
+For obvious reasons I cannot push the `GoogleAuth` secret so I added a Guest Login in order to be able to test the project without having to change any `.env` file
+
 Once the environment variables are configured, the project can be started with Docker Compose.
 
 The application is then available at:
