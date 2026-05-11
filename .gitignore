@@ -1,10 +1,5 @@
 .*.swp
-<<<<<<< HEAD
 **/.env
 .env
 frontend/files/.env
 backend/files/.env
-=======
-.env.backup
-.env
->>>>>>> 2ae7d7d (fix: rm .env)
