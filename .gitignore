@@ -1,2 +1,5 @@
 .*.swp
-.env.backup
+**/.env
+.env
+frontend/files/.env
+backend/files/.env
